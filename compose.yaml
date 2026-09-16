@@ -1,0 +1,44 @@
+services:
+  agentflow:
+    build:
+      context: .
+      args:
+        EMBED_MODEL: ${AGENTFLOW_DOCKER_EMBED_MODEL:-BAAI/bge-small-zh-v1.5}
+    ports:
+      - "8000:8000"
+    environment:
+      AGENTFLOW_LLM_API_KEY: ${AGENTFLOW_LLM_API_KEY:-}
+      AGENTFLOW_LLM_BASE_URL: ${AGENTFLOW_LLM_BASE_URL:-https://api.deepseek.com}
+      AGENTFLOW_LLM_MODEL: ${AGENTFLOW_LLM_MODEL:-deepseek-chat}
+      AGENTFLOW_RETRIEVAL_BACKEND: ${AGENTFLOW_RETRIEVAL_BACKEND:-pgvector}
+      AGENTFLOW_DATABASE_URL: postgresql://agentflow:${AGENTFLOW_POSTGRES_PASSWORD:-agentflow}@postgres:5432/agentflow
+      AGENTFLOW_ADMIN_API_KEY: ${AGENTFLOW_ADMIN_API_KEY:-}
+      AGENTFLOW_INPUT_COST_PER_MILLION_USD: ${AGENTFLOW_INPUT_COST_PER_MILLION_USD:-0}
+      AGENTFLOW_OUTPUT_COST_PER_MILLION_USD: ${AGENTFLOW_OUTPUT_COST_PER_MILLION_USD:-0}
+    volumes:
+      - agentflow_runtime:/app/runtime
+      - agentflow_index:/app/data/index
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  postgres:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_DB: agentflow
+      POSTGRES_USER: agentflow
+      POSTGRES_PASSWORD: ${AGENTFLOW_POSTGRES_PASSWORD:-agentflow}
+    volumes:
+      - agentflow_postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U agentflow -d agentflow"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  agentflow_runtime:
+  agentflow_index:
+  agentflow_postgres:

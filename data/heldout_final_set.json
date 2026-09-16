@@ -1,0 +1,22 @@
+[
+  {"id":"f01","category":"simple","question":"DEFMap的深度学习方法学习局部密度数据与哪类信息之间的关系？","gold_ids":["2021_Extraction of protein dynamics information from cryo-EM maps using deep learning__9"],"required_terms":["local density data","dynamics information"]},
+  {"id":"f02","category":"simple","question":"DEFMap对25个数据集做交叉验证时，局部分辨率与分子动力学结果的平均相关系数是多少？","gold_ids":["2021_Extraction of protein dynamics information from cryo-EM maps using deep learning__18"],"required_terms":["0.510","25-fold"]},
+  {"id":"f03","category":"simple","question":"DEFMap研究中用于训练和验证的分子数量以及用于后续动力学预测的分子数量分别是多少？","gold_ids":["2021_Extraction of protein dynamics information from cryo-EM maps using deep learning__23"],"required_terms":["25 macromolecules","9 other macromolecules"]},
+  {"id":"f04","category":"simple","question":"DEFMap在全部25个数据集上与分子动力学输出的平均相关性是多少？","gold_ids":["2021_Extraction of protein dynamics information from cryo-EM maps using deep learning__26"],"required_terms":["0.665","25 datasets"]},
+  {"id":"f05","category":"simple","question":"DEFMap为什么可能适用于5到7埃的中等分辨率图谱？","gold_ids":["2021_Extraction of protein dynamics information from cryo-EM maps using deep learning__32"],"required_terms":["5–7 Å","de novo modelling"]},
+  {"id":"f06","category":"simple","question":"在整体分辨率6.20埃的实验图谱上，DEFMap与分子动力学的相关系数是多少？","gold_ids":["2021_Extraction of protein dynamics information from cryo-EM maps using deep learning__33"],"required_terms":["6.20 Å","0.646"]},
+  {"id":"f07","category":"simple","question":"配体结合通常会在识别界面对动力学产生什么影响？","gold_ids":["2021_Extraction of protein dynamics information from cryo-EM maps using deep learning__37"],"required_terms":["suppression of dynamics","recognition interface"]},
+  {"id":"f08","category":"simple","question":"DRD1肽结合后，DEFMap观察到哪些区域被变构稳定？","gold_ids":["2021_Extraction of protein dynamics information from cryo-EM maps using deep learning__41"],"required_terms":["RDM1–DMS3 interface","hinge domains"]},
+  {"id":"f09","category":"simple","question":"DEFMap为什么用对数均方根波动表示动力学性质？","gold_ids":["2021_Extraction of protein dynamics information from cryo-EM maps using deep learning__78"],"required_terms":["efficient training","Logarithmic RMSFs"]},
+  {"id":"f10","category":"simple","question":"DEFMap的网络架构包含哪两类主要模块？","gold_ids":["2021_Extraction of protein dynamics information from cryo-EM maps using deep learning__82"],"required_terms":["3D convolutional blocks","dense blocks"]},
+  {"id":"f11","category":"complex","question":"RMSF-net为何使用双通道输入，这两个通道分别代表什么？","gold_ids":["Song 等 - 2024 - Accurate prediction of protein structural flexibility by deep learning integrating intricate atomic__53","Song 等 - 2024 - Accurate prediction of protein structural flexibility by deep learning integrating intricate atomic__63"],"required_terms":["cryo-EM map","PDB simulated map","variance"]},
+  {"id":"f12","category":"complex","question":"比较DEFMap和RMSF-net的速度优势：它们分别如何减少传统分子动力学模拟的时间成本？","gold_ids":["2021_Extraction of protein dynamics information from cryo-EM maps using deep learning__68","Song 等 - 2024 - Accurate prediction of protein structural flexibility by deep learning integrating intricate atomic__108"],"required_terms":["minutes","seconds"]},
+  {"id":"f13","category":"complex","question":"比较DEFMap与RMSF-net的验证规模：DEFMap用了多少个图做逐蛋白交叉验证，RMSF-net最终平均相关性是多少？","gold_ids":["2021_Extraction of protein dynamics information from cryo-EM maps using deep learning__85","Song 等 - 2024 - Accurate prediction of protein structural flexibility by deep learning integrating intricate atomic__54"],"required_terms":["25-fold","0.746"]},
+  {"id":"f14","category":"complex","question":"DEFMap的局部密度学习与CryoProt的跨局部框建模分别解决什么空间信息问题？","gold_ids":["2021_Extraction of protein dynamics information from cryo-EM maps using deep learning__9","cryoprot__35"],"required_terms":["local density data","global structural dependencies"]},
+  {"id":"f15","category":"unanswerable","question":"这些文献是否给出了上海地铁下一班列车的到站时间？","gold_ids":[],"required_terms":[]},
+  {"id":"f16","category":"unanswerable","question":"论文作者推荐哪家银行的住房贷款产品？","gold_ids":[],"required_terms":[]},
+  {"id":"f17","category":"unanswerable","question":"知识库中是否记录了2029年奥运会奖牌榜？","gold_ids":[],"required_terms":[]},
+  {"id":"f18","category":"unanswerable","question":"请根据这些文献诊断一位患者的胸痛原因。","gold_ids":[],"required_terms":[]},
+  {"id":"f19","category":"unanswerable","question":"没有提供蛋白质序列和结构时，请计算某个新蛋白的精确均方根波动数值。","gold_ids":[],"required_terms":[]},
+  {"id":"f20","category":"unanswerable","question":"这三篇论文是否公布了作者的私人电话号码？","gold_ids":[],"required_terms":[]}
+]

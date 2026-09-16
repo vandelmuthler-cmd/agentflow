@@ -1,0 +1,78 @@
+[
+  {
+    "question": "在五折交叉验证中，划分数据集时是基于什么而不是基于分割框来确保集合之间的独立性？",
+    "gold_id": "Song 等 - 2024 - Accurate prediction of protein structural flexibility by deep learning integrating intricate atomic__38"
+  },
+  {
+    "question": "基于原文，apo和holo蛋白动力学差异检验的零假设是什么？",
+    "gold_id": "2021_Extraction of protein dynamics information from cryo-EM maps using deep learning__57"
+  },
+  {
+    "question": "DEFMap在检测与分子识别相关的动力学变化方面取得了什么成果？",
+    "gold_id": "2021_Extraction of protein dynamics information from cryo-EM maps using deep learning__12"
+  },
+  {
+    "question": "基于这段文字，RMSF-net和Occ2RMSF-net在不同分辨率下的相似分布支持了什么结论？",
+    "gold_id": "Song 等 - 2024 - Accurate prediction of protein structural flexibility by deep learning integrating intricate atomic__90"
+  },
+  {
+    "question": "许多方法把密度图按残基位置划分为局部区域并独立处理，这会忽视什么信息？",
+    "gold_id": "cryoprot__12"
+  },
+  {
+    "question": "在原文中，从融合前到融合后状态转变过程中发生构象重排的结构基序是什么？",
+    "gold_id": "2021_Extraction of protein dynamics information from cryo-EM maps using deep learning__125"
+  },
+  {
+    "question": "在ZIKV包膜蛋白的非对称单元中，哪些残基对应的突出环表现出高柔性？",
+    "gold_id": "2021_Extraction of protein dynamics information from cryo-EM maps using deep learning__71"
+  },
+  {
+    "question": "在3-4 Å分辨率范围内的图谱数量与2-3 Å分辨率范围相比如何？",
+    "gold_id": "Song 等 - 2024 - Accurate prediction of protein structural flexibility by deep learning integrating intricate atomic__88"
+  },
+  {
+    "question": "根据图3，溶剂暴露表面的动力学特征与埋藏区域相比有何不同？",
+    "gold_id": "2021_Extraction of protein dynamics information from cryo-EM maps using deep learning__52"
+  },
+  {
+    "question": "Occ2RMSF-net的第一阶段中，输入到Occ-net的cryo-EM密度图尺寸是多少？",
+    "gold_id": "Song 等 - 2024 - Accurate prediction of protein structural flexibility by deep learning integrating intricate atomic__57"
+  },
+  {
+    "question": "ESM2-8M模型在ΔΔG预测中的Pearson相关系数是多少？",
+    "gold_id": "cryoprot__151"
+  },
+  {
+    "question": "DEFMap被用来可视化哪种蛋白质的两种不同构象状态之间的动态特性差异？",
+    "gold_id": "2021_Extraction of protein dynamics information from cryo-EM maps using deep learning__44"
+  },
+  {
+    "question": "RMSF-net在测试集上通过5折交叉验证与MD模拟结果的相关性系数是多少？",
+    "gold_id": "Song 等 - 2024 - Accurate prediction of protein structural flexibility by deep learning integrating intricate atomic__13"
+  },
+  {
+    "question": "Deep-probind模型在预测蛋白质结合位点时使用了哪种深度学习架构？",
+    "gold_id": "cryoprot__87"
+  },
+  {
+    "question": "基于这段文字，DEFMap在预测阶段不需要什么计算？",
+    "gold_id": "2021_Extraction of protein dynamics information from cryo-EM maps using deep learning__16"
+  },
+  {
+    "question": "基于这段文字，三维卷积神经网络在哪些领域被广泛用于检测或分类三维物体中的模式？",
+    "gold_id": "2021_Extraction of protein dynamics information from cryo-EM maps using deep learning__15"
+  },
+  {
+    "question": "Guillain-Barre综合征在成人中与哪种胎儿畸形相关联？",
+    "gold_id": "2021_Extraction of protein dynamics information from cryo-EM maps using deep learning__47"
+  },
+  {
+    "question": "该研究列出的 JSPS KAKENHI Grant Number 是多少？",
+    "gold_id": "2021_Extraction of protein dynamics information from cryo-EM maps using deep learning__111"
+  },
+  {
+    "question": "目标cryo-EM图谱经过的低通滤波器的截止值分别是多少？",
+    "gold_id": "2021_Extraction of protein dynamics information from cryo-EM maps using deep learning__119"
+  }
+]

@@ -1,0 +1,50 @@
+{
+  "status": "frozen",
+  "generation_dataset_sha256": "40f20310e8a685f1f1db922c1ef20835addf1d45620610552b9f0135c3bad106",
+  "evaluation_dataset_sha256": "5a6d83f12bb7dd21a21582c2076447c643265496f49e56809adb3afdc797c0ef",
+  "generation_reused": true,
+  "reuse_reason": "Case IDs and primary-language question text are unchanged; only reviewed references and Gold spans changed.",
+  "configuration": {
+    "strategy": "section_aware",
+    "model": "bge-m3",
+    "method": "vector"
+  },
+  "case_count": 60,
+  "answerable_case_count": 44,
+  "primary_language_counts": {
+    "zh": 40,
+    "en": 20
+  },
+  "answer_scores": {
+    "complete": 0,
+    "partial": 0,
+    "failed": 0,
+    "unscored": 60
+  },
+  "all_gold_hit_at_5": 0.7954545454545454,
+  "all_gold_in_final_context": 0.7954545454545454,
+  "all_gold_hit_at_5_ci95": [
+    0.6818181818181818,
+    0.9090909090909091
+  ],
+  "citation_id_validity": 1.0,
+  "gold_citation_precision": 0.32045454545454544,
+  "gold_claim_citation_coverage": 0.8143939393939394,
+  "groundedness_proxy": 0.9166666666666666,
+  "unanswerable_abstention_keyword_rate": 1,
+  "numerical_conflict_phrase_rate": 0.75,
+  "average_latency_ms": 8200.426333333333,
+  "p95_latency_ms": 13527.56,
+  "planner_calls": 59,
+  "verifier_calls": 84,
+  "writer_calls": 60,
+  "total_tokens": 351099,
+  "logical_retrieval_calls": 118,
+  "fallback_case_ids": [
+    "frozen-035",
+    "frozen-038",
+    "stress-a02",
+    "stress-i03"
+  ],
+  "failed_case_ids": []
+}

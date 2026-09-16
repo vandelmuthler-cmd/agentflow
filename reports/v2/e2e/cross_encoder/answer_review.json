@@ -1,0 +1,51 @@
+{
+  "dataset_sha256": "5a6d83f12bb7dd21a21582c2076447c643265496f49e56809adb3afdc797c0ef",
+  "review_type": "AI-assisted manual source review",
+  "independent_human_review": false,
+  "rubric": {
+    "2": "The answer contains every required fact and reaches the reference conclusion.",
+    "1": "The answer contains at least one required fact but omits or weakens another required fact.",
+    "0": "The answer misses the target conclusion or answers a different question."
+  },
+  "full_credit_case_ids": [
+    "frozen-001", "frozen-002", "frozen-003", "frozen-004", "frozen-005",
+    "frozen-006", "frozen-007", "frozen-008", "frozen-009", "frozen-010",
+    "frozen-011", "frozen-012", "frozen-014", "frozen-015", "frozen-016",
+    "frozen-017", "frozen-018", "frozen-019", "frozen-020", "frozen-021",
+    "frozen-022", "frozen-023", "frozen-024", "frozen-025", "frozen-026",
+    "frozen-027", "frozen-028", "frozen-029", "frozen-030", "frozen-031",
+    "frozen-032", "frozen-033", "frozen-034", "frozen-035", "frozen-036",
+    "frozen-037", "frozen-038", "frozen-040",
+    "stress-a01", "stress-a02", "stress-a03", "stress-c03",
+    "stress-i01", "stress-i02", "stress-i03",
+    "stress-u01", "stress-u02", "stress-u03", "stress-u04", "stress-u05",
+    "stress-u06", "stress-u07", "stress-u08", "stress-u09", "stress-u10"
+  ],
+  "exceptions": [
+    {
+      "id": "frozen-013",
+      "score": 0,
+      "reason": "The answer discusses discretization and missing structural priors instead of the required sensitivity to initial volumes and predefined cluster counts."
+    },
+    {
+      "id": "frozen-039",
+      "score": 0,
+      "reason": "The answer abstains and does not state the required coarse-grained global search followed by fine-grained structural refinement."
+    },
+    {
+      "id": "stress-c01",
+      "score": 1,
+      "reason": "The answer identifies 25-fold versus 5-fold validation and rejects direct comparison, but omits that DEFMap's folds correspond to 25 cryo-EM maps and does not fully explain the protocol difference."
+    },
+    {
+      "id": "stress-c02",
+      "score": 1,
+      "reason": "The answer gives CryoBench's five synthetic datasets and the comparability caveat, but misses CryoSTAR's four experimental datasets."
+    },
+    {
+      "id": "stress-c04",
+      "score": 1,
+      "reason": "The answer contains the expected 1,390, 335, and 321 counts and the non-comparability conclusion, but foregrounds a newer 1,938-chain ATLAS release instead of the frozen ATLAS source's 1,390-chain main dataset."
+    }
+  ]
+}

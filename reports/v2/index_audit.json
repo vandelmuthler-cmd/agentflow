@@ -1,0 +1,80 @@
+{
+  "index_count": 9,
+  "expected_index_count": 9,
+  "rows": [
+    {
+      "strategy": "fixed_char",
+      "model": "bge-small-zh-v1.5",
+      "documents": 1845,
+      "dimension": 512,
+      "normalized": true,
+      "valid": true
+    },
+    {
+      "strategy": "fixed_char",
+      "model": "bge-small-en-v1.5",
+      "documents": 1845,
+      "dimension": 384,
+      "normalized": true,
+      "valid": true
+    },
+    {
+      "strategy": "fixed_char",
+      "model": "bge-m3",
+      "documents": 1845,
+      "dimension": 1024,
+      "normalized": true,
+      "valid": true
+    },
+    {
+      "strategy": "recursive_token",
+      "model": "bge-small-zh-v1.5",
+      "documents": 929,
+      "dimension": 512,
+      "normalized": true,
+      "valid": true
+    },
+    {
+      "strategy": "recursive_token",
+      "model": "bge-small-en-v1.5",
+      "documents": 929,
+      "dimension": 384,
+      "normalized": true,
+      "valid": true
+    },
+    {
+      "strategy": "recursive_token",
+      "model": "bge-m3",
+      "documents": 929,
+      "dimension": 1024,
+      "normalized": true,
+      "valid": true
+    },
+    {
+      "strategy": "section_aware",
+      "model": "bge-small-zh-v1.5",
+      "documents": 934,
+      "dimension": 512,
+      "normalized": true,
+      "valid": true
+    },
+    {
+      "strategy": "section_aware",
+      "model": "bge-small-en-v1.5",
+      "documents": 934,
+      "dimension": 384,
+      "normalized": true,
+      "valid": true
+    },
+    {
+      "strategy": "section_aware",
+      "model": "bge-m3",
+      "documents": 934,
+      "dimension": 1024,
+      "normalized": true,
+      "valid": true
+    }
+  ],
+  "errors": [],
+  "passed": true
+}

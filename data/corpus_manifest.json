@@ -1,0 +1,35 @@
+{
+  "corpus_id": "agentflow-retrieval-benchmark-v1",
+  "documents": [
+    {
+      "filename": "2021_Extraction of protein dynamics information from cryo-EM maps using deep learning.pdf",
+      "title": "Extraction of protein dynamics information from cryo-EM maps using deep learning",
+      "source_url": "https://www.nature.com/articles/s42256-020-00290-y",
+      "doi": "10.1038/s42256-020-00290-y",
+      "redistributed_in_repository": false,
+      "license_note": "The publisher page identifies the version of record as subscription content. Obtain an authorized copy from the publisher, an institution, or the linked preprint source.",
+      "bytes": 14632530,
+      "sha256": "5a4d27aaafbfc5a6ca9a7c3dc0d9985f77dce28b5944cc00938c322c89893967"
+    },
+    {
+      "filename": "cryoprot.pdf",
+      "title": "CryoProt: A Protein Pretraining Framework with Cross-Box Interactions on Cryo-EM Density Maps",
+      "source_url": "https://arxiv.org/abs/2606.00955",
+      "doi": "10.48550/arXiv.2606.00955",
+      "redistributed_in_repository": false,
+      "license_note": "The arXiv record uses the arXiv non-exclusive distribution license, which does not grant this repository a general redistribution license.",
+      "bytes": 10203463,
+      "sha256": "f3831374313ed52f1a27dbfaed91c6253ce7a7ef8f0efc71874a692a4b8b49ef"
+    },
+    {
+      "filename": "Song 等 - 2024 - Accurate prediction of protein structural flexibility by deep learning integrating intricate atomic.pdf",
+      "title": "Accurate Prediction of Protein Structural Flexibility by Deep Learning Integrating Intricate Atomic Structures and Cryo-EM Density Information",
+      "source_url": "https://www.nature.com/articles/s41467-024-49858-x",
+      "doi": "10.1038/s41467-024-49858-x",
+      "redistributed_in_repository": false,
+      "license_note": "The article is available under Creative Commons Attribution 4.0. The repository still omits the PDF to keep corpus acquisition explicit and uniform.",
+      "bytes": 5901508,
+      "sha256": "05c806f9e03f39ddd1cccb89e2cbf6b901477c071768bf7c4174be7a29888ff1"
+    }
+  ]
+}
