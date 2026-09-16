@@ -17,6 +17,16 @@ def _vector_literal(values: Sequence[float]) -> str:
     return "[" + ",".join(f"{float(value):.9g}" for value in values) + "]"
 
 
+def _postgres_safe(value):
+    if isinstance(value, str):
+        return value.replace("\x00", "")
+    if isinstance(value, dict):
+        return {key: _postgres_safe(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [_postgres_safe(item) for item in value]
+    return value
+
+
 class VectorSearchStore(Protocol):
     def load_documents(self) -> list[Evidence]: ...
 
@@ -109,16 +119,34 @@ class PgVectorStore:
         self, document_id: str, source: str, chunks: list[Evidence]
     ) -> int:
         embeddings = encode_passages([chunk.text for chunk in chunks])
-        self.ensure_schema(int(embeddings.shape[1]))
+        return self.replace_document_embeddings(document_id, source, chunks, embeddings)
+
+    def replace_document_embeddings(
+        self,
+        document_id: str,
+        source: str,
+        chunks: list[Evidence],
+        embeddings: Sequence[Sequence[float]],
+    ) -> int:
+        if len(chunks) != len(embeddings):
+            raise ValueError("chunk and embedding counts must match")
+        if not chunks:
+            return 0
+        dimension = len(embeddings[0])
+        if dimension <= 0 or any(len(values) != dimension for values in embeddings):
+            raise ValueError("all embeddings must have the same positive dimension")
+        self.ensure_schema(dimension)
         rows = [
             (
                 chunk.id,
                 document_id,
-                source,
-                chunk.text,
+                _postgres_safe(source),
+                _postgres_safe(chunk.text),
                 json.dumps(
-                    chunk.model_dump(
-                        exclude={"id", "source", "text", "score", "rank"}
+                    _postgres_safe(
+                        chunk.model_dump(
+                            exclude={"id", "source", "text", "score", "rank"}
+                        )
                     ),
                     ensure_ascii=False,
                 ),

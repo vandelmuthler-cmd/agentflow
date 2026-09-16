@@ -51,6 +51,10 @@ export AGENTFLOW_LLM_MODEL=deepseek-chat
 docker compose up -d
 ```
 
+The Compose file also accepts the legacy `DEEPSEEK_API_KEY`,
+`DEEPSEEK_BASE_URL`, and `DEEPSEEK_MODEL` names used by earlier local setups.
+The `AGENTFLOW_LLM_*` names are preferred for provider-neutral deployments.
+
 Do not put a real key in `compose.yaml` or commit a `.env` file.
 
 ## Persistent files
@@ -96,10 +100,20 @@ the `X-AgentFlow-Admin-Key` header.
 
 ## Verification boundary
 
-The Compose deployment was smoke-tested on Docker Desktop 4.91.0 with Docker
+The Compose deployment was validated on Docker Desktop 4.91.0 with Docker
 Engine 29.8.0. The check covered image construction, non-root model loading,
-API and PostgreSQL health checks, a real pgvector-backed retrieval request,
-pgvector extension initialization, and restart persistence. Load, backup and
-restore, multi-host deployment, and security testing are not covered. These
-checks are not currently executed by an automated continuous-integration
-workflow, so they should be repeated in each target environment.
+protected HTTP indexing/search/deletion, PostgreSQL and pgvector health checks,
+an 80-query frozen bilingual retrieval benchmark, SSE node events, and SQLite
+run persistence across a container restart. The pgvector benchmark reproduced
+the selected local metrics exactly: All-gold Hit@5 was 95.0% and MRR@10 was
+0.914. CPU query-pipeline latency averaged 10.03 s (P95 13.46 s).
+
+External HTTPS handshakes failed in the validation environment, so the Docker
+run exercised the traced model-failure path instead of a successful DeepSeek
+response. This is not evidence of online model success. See the
+[dated validation report](../reports/docker_validation_2026-09-16.md) and the
+[machine-readable pgvector report](../reports/v2/frozen/section_aware_bge-m3/pgvector-report.json).
+Load, backup and restore, multi-host deployment, and security testing are not
+covered. These checks are not currently executed by an automated
+continuous-integration workflow, so they should be repeated in each target
+environment.

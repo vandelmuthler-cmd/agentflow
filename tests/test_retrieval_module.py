@@ -4,7 +4,11 @@ from pydantic import ValidationError
 
 import agentflow.api.app as api_module
 from agentflow.retrieval.management import RetrievalIndexManager, build_document_chunks
-from agentflow.retrieval.pgvector import PgVectorResearchRetriever
+from agentflow.retrieval.pgvector import (
+    PgVectorResearchRetriever,
+    PgVectorStore,
+    _postgres_safe,
+)
 from agentflow.schemas import DocumentIndexRequest, Evidence
 
 
@@ -71,6 +75,27 @@ def test_pgvector_index_manager_replaces_and_deletes_one_document() -> None:
     assert store.replaced[0:2] == ("manual", "manual.md")
     assert store.deleted == "manual"
     assert deleted == 2
+
+
+def test_pgvector_precomputed_import_rejects_misaligned_vectors() -> None:
+    store = PgVectorStore("postgresql://unused")
+    chunks = [Evidence(id="doc__0", source="doc.md", text="content")]
+
+    try:
+        store.replace_document_embeddings("doc", "doc.md", chunks, [])
+    except ValueError as error:
+        assert "counts must match" in str(error)
+        return
+    raise AssertionError("misaligned precomputed embeddings must be rejected")
+
+
+def test_pgvector_text_sanitization_removes_nul_recursively() -> None:
+    payload = {"text": "alpha\x00beta", "nested": ["gamma\x00delta"]}
+
+    assert _postgres_safe(payload) == {
+        "text": "alphabeta",
+        "nested": ["gammadelta"],
+    }
 
 
 def test_document_index_request_rejects_invalid_chunk_window() -> None:

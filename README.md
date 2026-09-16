@@ -126,7 +126,7 @@ Cross-Encoder 结果经 AI 辅助逐题来源复核：55 题完整、3 题部分
 
 - 冻结双语评测集、Gold Span 到 Chunk 的动态映射和 SHA-256 校验。
 - Hit/Recall@K、MRR@10、nDCG@10、候选召回与 Bootstrap 95% 置信区间。
-- 68 项本地回归测试和 7 项 Harness 韧性测试。
+- 70 项本地回归测试和 7 项 Harness 韧性测试。
 - FastAPI、文档索引管理、运行查询/恢复、Docker Compose 和 pgvector。
 
 ## Quick Start
@@ -242,7 +242,7 @@ tests/          local regression coverage
 - 16 篇文档与 80 个问题意图仍是中等规模研究语料，不能代表通用互联网检索。
 - 逐题答案复核为 AI 辅助来源核对，并非独立人工盲审。
 - 原生模型工具选择只有小规模 pilot，不作为默认能力或核心结果。
-- Docker Compose 已在 Docker Desktop 4.91.0 上完成镜像构建、API/pgvector 健康检查、实际检索请求与容器重启恢复冒烟；尚未进行并发压测、备份恢复或生产安全审计。
+- Docker Compose 已在 Docker Desktop 4.91.0 上完成 HTTP 文档增删、80 条双语冻结检索、SSE 事件流与容器重启恢复验证；pgvector 与本地冻结指标一致。当前环境的外部 HTTPS 握手失败，因此本轮 Docker 在线 DeepSeek 成功路径未完成，详见 [Docker 验证报告](reports/docker_validation_2026-09-16.md)。
 
 ## Documentation
 
