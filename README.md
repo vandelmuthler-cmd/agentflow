@@ -51,9 +51,9 @@ flowchart TD
 
 ## Key Results
 
-### Frozen V2 retrieval benchmark
+### Frozen bilingual retrieval benchmark
 
-V2 包含 16 篇中英文文档和 80 个问题意图：20 个开发意图、40 个冻结可回答意图、20 个压力意图。每个意图均有中英文版本，因此检索开发集执行 40 个 Query Variant，冻结检索集执行 80 个 Query Variant。`section_aware` 索引包含 934 个 Chunk。
+评测集包含 16 篇中英文文档和 80 个问题意图：20 个开发意图、40 个冻结可回答意图、20 个压力意图。每个意图均有中英文版本，因此检索开发集执行 40 个 Query Variant，冻结检索集执行 80 个 Query Variant。`section_aware` 索引包含 934 个 Chunk。
 
 所有配置只在开发集上选择；冻结集不参与切块、Embedding、融合方法或重排器选择。80 个意图均经过来源证据复核，冻结数据 SHA-256 为 `5a6d83f12bb7dd21a21582c2076447c643265496f49e56809adb3afdc797c0ef`。
 
@@ -65,7 +65,7 @@ V2 包含 16 篇中英文文档和 80 个问题意图：20 个开发意图、40 
 | RRF + Query Expansion | 37.5% | 55.0% | 63.8% | 0.494 | 100.0% union | 199.5 ms |
 | **RRF + Query Expansion + Cross-Encoder** | **85.0%** | **95.0%** | **95.0%** | **0.914** | **97.5% @30** | **9.65 s** |
 
-同一 V2 语料上的 V1 风格基线 `fixed_char + bge-small-zh-v1.5 + BM25` 的 Hit@5 为 43.8%、MRR@10 为 0.361。该对照说明多语言 Embedding 与重排对双语检索有效，也显示 Cross-Encoder 在 CPU 上带来明显延迟成本。
+同一语料上的基础检索对照 `fixed_char + bge-small-zh-v1.5 + BM25` 的 Hit@5 为 43.8%、MRR@10 为 0.361。最终配置采用 `section_aware + BGE-M3 + BM25/Vector RRF + Query Expansion + Cross-Encoder`。该对照说明多语言 Embedding 与重排对双语检索有效，也显示 Cross-Encoder 在 CPU 上带来明显延迟成本。
 
 ### Frozen end-to-end run
 
@@ -160,7 +160,7 @@ AGENTFLOW_LLM_VERIFIER_ENABLED=true
 
 接口遵循 OpenAI-compatible Chat Completions 格式，不限定模型提供商。
 
-### Prepare the V2 benchmark
+### Reproduce the benchmark
 
 项目不分发第三方论文 PDF。按照 [语料说明](data/raw/README.md) 获取 Manifest 中的 16 个文件后：
 
@@ -179,9 +179,9 @@ python -B scripts/run_v2_retrieval_suite.py
 
 本地模型路径可通过该脚本的 `--bge-small-zh-path`、`--bge-small-en-path`、`--bge-m3-path` 和 `--reranker-path` 参数传入。
 
-### Run one research task
+### Run one research task locally
 
-设置 V2 运行配置：
+设置最终检索配置：
 
 ```env
 AGENTFLOW_CORPUS_VERSION=v2
@@ -215,6 +215,10 @@ Docker：
 docker compose up --build -d
 ```
 
+Compose 默认启动 FastAPI 与 PostgreSQL/pgvector。用户先通过受保护的
+`POST /retrieval/index` 导入自己的文本，再调用 `/retrieval/search` 或
+`/research`；第三方论文不会被打包进镜像。
+
 ## Project Structure
 
 ```text
@@ -225,7 +229,7 @@ agentflow/
   generation/   evidence writer and citation validation
   storage/      SQLite checkpoints and traces
   api/          FastAPI service
-  evals/        V2 dataset schema, mapping and ranking metrics
+  evals/        frozen dataset schema, mapping and ranking metrics
 data/           manifests, frozen benchmark and local-data instructions
 reports/v2/     frozen experiment summaries and auditable details
 scripts/        corpus, index, evaluation and demo entry points

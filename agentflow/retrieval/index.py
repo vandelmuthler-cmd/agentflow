@@ -7,9 +7,12 @@ from agentflow.config import (
     CORPUS_VERSION,
     DATABASE_URL,
     DEFAULT_CANDIDATE_TOP_K,
+    DEFAULT_RERANK_CANDIDATE_TOP_K,
     DEFAULT_RERANK_VECTOR_WEIGHT,
     DOCUMENT_INDEX_PATH,
     RETRIEVAL_BACKEND,
+    RETRIEVAL_METHOD,
+    RERANKER_MODEL_PATH,
     V2_CHUNKING_STRATEGY,
     V2_EMBED_MODEL,
     V2_EMBED_MODEL_PATH,
@@ -53,13 +56,13 @@ def summarize_documents(documents: list[Evidence]) -> dict[str, int]:
 def build_retriever(
     raw_dir: Path,
 ) -> OptimizedResearchRetriever | PgVectorResearchRetriever | V2ResearchRetriever:
-    if CORPUS_VERSION == "v2" and RETRIEVAL_BACKEND != "local":
-        raise ValueError("V2 retrieval requires the local serving index")
     if RETRIEVAL_BACKEND == "pgvector":
         return PgVectorResearchRetriever(
             PgVectorStore(DATABASE_URL),
+            method=RETRIEVAL_METHOD,
             candidate_top_k=DEFAULT_CANDIDATE_TOP_K,
-            vector_weight=DEFAULT_RERANK_VECTOR_WEIGHT,
+            rerank_candidate_top_k=DEFAULT_RERANK_CANDIDATE_TOP_K,
+            reranker_model=RERANKER_MODEL_PATH,
         )
     if RETRIEVAL_BACKEND != "local":
         raise ValueError(f"unsupported retrieval backend: {RETRIEVAL_BACKEND}")

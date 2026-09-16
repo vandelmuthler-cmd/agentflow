@@ -36,8 +36,18 @@ DATABASE_URL = os.getenv(
 ADMIN_API_KEY = os.getenv("AGENTFLOW_ADMIN_API_KEY", "")
 EMBED_MODEL_PATH = os.getenv(
     "AGENTFLOW_EMBED_MODEL_PATH",
-    "BAAI/bge-small-zh-v1.5",
+    "BAAI/bge-m3",
 )
+RERANKER_MODEL_PATH = os.getenv(
+    "AGENTFLOW_RERANKER_MODEL_PATH",
+    "BAAI/bge-reranker-base",
+)
+RETRIEVAL_METHOD = os.getenv(
+    "AGENTFLOW_RETRIEVAL_METHOD", "cross_encoder"
+).strip().lower()
+ONLINE_CHUNKING_STRATEGY = os.getenv(
+    "AGENTFLOW_CHUNKING_STRATEGY", "section_aware"
+).strip().lower()
 EVAL_RUNS_DIR = DATA_DIR / "eval_runs"
 _run_workspace_dir = Path(os.getenv("AGENTFLOW_RUN_WORKSPACE_DIR", "data/runs"))
 RUN_WORKSPACE_DIR = (
@@ -75,7 +85,8 @@ MAX_NO_PROGRESS_ROUNDS = int(
 QUERY_SIMILARITY_THRESHOLD = float(
     os.getenv("AGENTFLOW_QUERY_SIMILARITY_THRESHOLD", "0.95")
 )
-DEFAULT_CANDIDATE_TOP_K = 20
+DEFAULT_CANDIDATE_TOP_K = 50
+DEFAULT_RERANK_CANDIDATE_TOP_K = 30
 DEFAULT_RERANK_VECTOR_WEIGHT = 0.4
 
 LLM_API_KEY = os.getenv("AGENTFLOW_LLM_API_KEY") or os.getenv("DEEPSEEK_API_KEY", "")

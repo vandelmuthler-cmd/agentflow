@@ -2,9 +2,9 @@
 
 ## What is packaged
 
-The image installs Python dependencies and downloads the configured embedding
-model. Docker Compose starts AgentFlow together with PostgreSQL and pgvector.
-Documents are indexed at runtime rather than copied into the image.
+The image installs Python dependencies, BGE-M3, and the Cross-Encoder reranker.
+Docker Compose starts AgentFlow together with PostgreSQL and pgvector. Documents
+are indexed at runtime rather than copied into the image.
 
 ## Build and run
 
@@ -26,7 +26,18 @@ The first build needs network access for Python packages and the embedding model
 Later image builds reuse Docker layers where available; database indexes remain
 in the PostgreSQL volume.
 The pgvector database is empty on first startup. Use the protected
-`POST /retrieval/index` endpoint to add text documents.
+`POST /retrieval/index` endpoint to add text documents. The default online path
+uses section-aware chunking, independent BM25 and vector recall, Reciprocal Rank
+Fusion, query expansion, and Cross-Encoder reranking.
+
+Run a temporary end-to-end retrieval smoke test inside the container:
+
+```powershell
+docker compose exec -T agentflow python -B scripts/smoke_docker_retrieval.py
+```
+
+The script indexes two temporary documents, verifies that the relevant document
+is ranked first, prints a compact result, and removes both documents in `finally`.
 
 ## LLM configuration
 
@@ -70,12 +81,14 @@ state and should only be used for an intentional clean reset.
 
 Compose selects `AGENTFLOW_RETRIEVAL_BACKEND=pgvector` by default. The Agent and
 the standalone `/retrieval/search` endpoint use the same retriever instance.
-Set `AGENTFLOW_RETRIEVAL_BACKEND=local` to use the JSONL and NumPy indexes used
-by the published benchmark.
+Set `AGENTFLOW_RETRIEVAL_BACKEND=local` only when reproducing the published
+JSONL/NumPy benchmark. The Docker image is intended for dynamic user documents
+and uses the same selected chunking, embedding, fusion, and reranking components.
 
-The V2 serving snapshot path requires a mounted V2 index and a matching V2
-embedding model. The default Compose image only prepares the V1 model and
-starts with the pgvector backend; it is not a ready-to-run V2 deployment.
+An existing empty pgvector table created with another embedding dimension is
+recreated automatically. A non-empty incompatible table is rejected so that
+stored vectors are never silently interpreted with the wrong model; export or
+delete those documents before rebuilding the index.
 
 Document indexing and deletion are disabled unless
 `AGENTFLOW_ADMIN_API_KEY` is configured. Clients must send the same value in

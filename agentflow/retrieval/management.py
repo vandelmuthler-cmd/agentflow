@@ -6,6 +6,7 @@ from agentflow.config import (
     CORPUS_VERSION,
     DATABASE_URL,
     DOCUMENT_INDEX_PATH,
+    ONLINE_CHUNKING_STRATEGY,
     RETRIEVAL_BACKEND,
     VECTOR_IDS_PATH,
     VECTOR_INDEX_PATH,
@@ -14,11 +15,11 @@ from agentflow.config import (
     V2_EMBED_MODEL_PATH,
     V2_INDEX_ROOT,
 )
-from agentflow.retrieval.chunking import chunk_text
 from agentflow.retrieval.pgvector import PgVectorStore
 from agentflow.retrieval.serving_index import V2ServingIndexManager
 from agentflow.retrieval.store import load_documents, save_documents
 from agentflow.retrieval.vector import save_vector_index
+from agentflow.retrieval.v2_corpus import build_text_chunks
 from agentflow.schemas import Evidence
 
 
@@ -29,15 +30,25 @@ def build_document_chunks(
     *,
     chunk_size: int = 500,
     overlap: int = 50,
+    language: str | None = None,
+    chunking_strategy: str = ONLINE_CHUNKING_STRATEGY,
 ) -> list[Evidence]:
-    return [
-        Evidence(
-            id=f"{document_id}__{index}",
-            source=source,
-            text=content,
-        )
-        for index, content in enumerate(chunk_text(text, chunk_size, overlap))
-    ]
+    resolved_language = language or _detect_language(text)
+    return build_text_chunks(
+        document_id,
+        source,
+        text,
+        chunking_strategy,
+        resolved_language,
+        fixed_size=chunk_size,
+        fixed_overlap=overlap,
+    )
+
+
+def _detect_language(text: str) -> str:
+    sample = text[:4000]
+    cjk_count = sum("\u4e00" <= character <= "\u9fff" for character in sample)
+    return "zh" if cjk_count >= max(1, len(sample) // 20) else "en"
 
 
 class RetrievalIndexManager:
@@ -62,8 +73,6 @@ class RetrievalIndexManager:
         self.vector_index_path = vector_index_path
         self.vector_ids_path = vector_ids_path
         self.pgvector_store = pgvector_store
-        if corpus_version == "v2" and backend != "local":
-            raise ValueError("V2 document management requires the local serving index")
         self.v2_manager = (
             V2ServingIndexManager(
                 v2_index_root,
@@ -71,7 +80,7 @@ class RetrievalIndexManager:
                 model_key=v2_model_key,
                 model_source=v2_model_source,
             )
-            if corpus_version == "v2" else None
+            if corpus_version == "v2" and backend == "local" else None
         )
         if backend == "pgvector" and self.pgvector_store is None:
             self.pgvector_store = PgVectorStore(database_url)
@@ -87,6 +96,7 @@ class RetrievalIndexManager:
         chunk_size: int = 500,
         overlap: int = 50,
         language: str | None = None,
+        chunking_strategy: str = ONLINE_CHUNKING_STRATEGY,
     ) -> int:
         if self.v2_manager is not None:
             return self.v2_manager.index_text(
@@ -99,6 +109,8 @@ class RetrievalIndexManager:
             text,
             chunk_size=chunk_size,
             overlap=overlap,
+            language=language,
+            chunking_strategy=chunking_strategy,
         )
         if not chunks:
             raise ValueError("document produced no non-empty chunks")

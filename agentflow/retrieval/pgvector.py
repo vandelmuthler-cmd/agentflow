@@ -1,13 +1,15 @@
 from __future__ import annotations
 
+import json
 from collections.abc import Sequence
 from contextlib import contextmanager
 from typing import Protocol
 
+from agentflow.config import RERANKER_MODEL_PATH
 from agentflow.retrieval.bm25 import SimpleBM25Retriever
-from agentflow.retrieval.embedding import embed_texts
+from agentflow.retrieval.embedding import encode_passages, encode_queries
+from agentflow.retrieval.hybrid import reciprocal_rank_fusion
 from agentflow.retrieval.query_expansion import expand_query
-from agentflow.retrieval.rerank import minmax
 from agentflow.schemas import Evidence
 
 
@@ -18,7 +20,7 @@ def _vector_literal(values: Sequence[float]) -> str:
 class VectorSearchStore(Protocol):
     def load_documents(self) -> list[Evidence]: ...
 
-    def similarity_scores(self, query: str, ids: list[str]) -> dict[str, float]: ...
+    def vector_search(self, query: str, top_k: int) -> list[Evidence]: ...
 
 
 class PgVectorStore:
@@ -44,12 +46,39 @@ class PgVectorStore:
             raise RuntimeError(f"pgvector operation failed: {error}") from error
 
     def ensure_schema(self, embedding_dimension: int | None = None) -> None:
-        dimension = embedding_dimension or int(embed_texts(["dimension probe"]).shape[1])
+        dimension = embedding_dimension or int(
+            encode_passages(["dimension probe"]).shape[1]
+        )
         if dimension <= 0:
             raise ValueError("embedding dimension must be positive")
         with self._connection() as connection:
             with connection.cursor() as cursor:
                 cursor.execute("CREATE EXTENSION IF NOT EXISTS vector")
+                cursor.execute("SELECT to_regclass('public.agentflow_chunks')")
+                table_exists = cursor.fetchone()[0] is not None
+                if table_exists:
+                    cursor.execute(
+                        """
+                        SELECT format_type(attribute.atttypid, attribute.atttypmod)
+                        FROM pg_attribute AS attribute
+                        JOIN pg_class AS relation ON relation.oid = attribute.attrelid
+                        WHERE relation.relname = 'agentflow_chunks'
+                          AND attribute.attname = 'embedding'
+                          AND attribute.attnum > 0
+                        """
+                    )
+                    row = cursor.fetchone()
+                    stored_type = row[0] if row else ""
+                    if stored_type != f"vector({dimension})":
+                        cursor.execute("SELECT COUNT(*) FROM agentflow_chunks")
+                        row_count = int(cursor.fetchone()[0])
+                        if row_count:
+                            raise RuntimeError(
+                                "embedding dimension changed from "
+                                f"{stored_type or 'unknown'} to vector({dimension}); "
+                                "export or delete the existing documents before rebuilding the index"
+                            )
+                        cursor.execute("DROP TABLE agentflow_chunks")
                 cursor.execute(
                     f"""
                     CREATE TABLE IF NOT EXISTS agentflow_chunks (
@@ -57,10 +86,15 @@ class PgVectorStore:
                         document_id TEXT NOT NULL,
                         source TEXT NOT NULL,
                         content TEXT NOT NULL,
+                        metadata JSONB NOT NULL DEFAULT '{{}}'::jsonb,
                         embedding VECTOR({dimension}) NOT NULL,
                         updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
                     )
                     """
+                )
+                cursor.execute(
+                    "ALTER TABLE agentflow_chunks ADD COLUMN IF NOT EXISTS "
+                    "metadata JSONB NOT NULL DEFAULT '{}'::jsonb"
                 )
                 cursor.execute(
                     "CREATE INDEX IF NOT EXISTS agentflow_chunks_document_id_idx "
@@ -74,7 +108,7 @@ class PgVectorStore:
     def replace_document(
         self, document_id: str, source: str, chunks: list[Evidence]
     ) -> int:
-        embeddings = embed_texts([chunk.text for chunk in chunks])
+        embeddings = encode_passages([chunk.text for chunk in chunks])
         self.ensure_schema(int(embeddings.shape[1]))
         rows = [
             (
@@ -82,6 +116,12 @@ class PgVectorStore:
                 document_id,
                 source,
                 chunk.text,
+                json.dumps(
+                    chunk.model_dump(
+                        exclude={"id", "source", "text", "score", "rank"}
+                    ),
+                    ensure_ascii=False,
+                ),
                 _vector_literal(embedding),
             )
             for chunk, embedding in zip(chunks, embeddings)
@@ -95,8 +135,8 @@ class PgVectorStore:
                 cursor.executemany(
                     """
                     INSERT INTO agentflow_chunks
-                        (id, document_id, source, content, embedding)
-                    VALUES (%s, %s, %s, %s, %s::vector)
+                        (id, document_id, source, content, metadata, embedding)
+                    VALUES (%s, %s, %s, %s, %s::jsonb, %s::vector)
                     """,
                     rows,
                 )
@@ -117,43 +157,73 @@ class PgVectorStore:
         with self._connection() as connection:
             with connection.cursor() as cursor:
                 cursor.execute(
-                    "SELECT id, source, content FROM agentflow_chunks ORDER BY id"
+                    "SELECT id, document_id, source, content, metadata "
+                    "FROM agentflow_chunks ORDER BY id"
                 )
                 return [
-                    Evidence(id=row[0], source=row[1], text=row[2])
+                    _evidence_from_row(row)
                     for row in cursor.fetchall()
                 ]
 
-    def similarity_scores(self, query: str, ids: list[str]) -> dict[str, float]:
-        if not ids:
-            return {}
-        query_embedding = _vector_literal(embed_texts([query])[0])
+    def vector_search(self, query: str, top_k: int) -> list[Evidence]:
+        if top_k <= 0:
+            return []
+        query_embedding_values = encode_queries([query])[0]
+        self.ensure_schema(len(query_embedding_values))
+        query_embedding = _vector_literal(query_embedding_values)
         with self._connection() as connection:
             with connection.cursor() as cursor:
                 cursor.execute(
                     """
-                    SELECT id, 1 - (embedding <=> %s::vector) AS similarity
+                    SELECT id, document_id, source, content, metadata,
+                           1 - (embedding <=> %s::vector) AS similarity
                     FROM agentflow_chunks
-                    WHERE id = ANY(%s)
+                    ORDER BY embedding <=> %s::vector
+                    LIMIT %s
                     """,
-                    (query_embedding, ids),
+                    (query_embedding, query_embedding, top_k),
                 )
-                return {row[0]: float(row[1]) for row in cursor.fetchall()}
+                return [
+                    _evidence_from_row(row[:5]).model_copy(
+                        update={"score": float(row[5]), "rank": rank}
+                    )
+                    for rank, row in enumerate(cursor.fetchall(), 1)
+                ]
+
+
+def _evidence_from_row(row) -> Evidence:
+    metadata = row[4] or {}
+    if isinstance(metadata, str):
+        metadata = json.loads(metadata)
+    return Evidence.model_validate(
+        {
+            **metadata,
+            "id": row[0],
+            "document_id": row[1],
+            "source": row[2],
+            "text": row[3],
+        }
+    )
 
 
 class PgVectorResearchRetriever:
-    """BM25 candidate retrieval with pgvector-backed semantic reranking."""
+    """Independent BM25/vector recall, RRF fusion, and optional reranking."""
 
     def __init__(
         self,
         store: VectorSearchStore,
         *,
-        candidate_top_k: int = 20,
-        vector_weight: float = 0.4,
+        method: str = "cross_encoder",
+        candidate_top_k: int = 50,
+        rerank_candidate_top_k: int = 30,
+        reranker_model: str = RERANKER_MODEL_PATH,
     ) -> None:
         self.store = store
         self.candidate_top_k = candidate_top_k
-        self.vector_weight = vector_weight
+        self.method = method
+        self.rerank_candidate_top_k = rerank_candidate_top_k
+        self.reranker_model = reranker_model
+        self._cross_encoder = None
         self.keyword_retriever = SimpleBM25Retriever()
         self.refresh()
 
@@ -161,34 +231,46 @@ class PgVectorResearchRetriever:
         self.keyword_retriever.add_documents(self.store.load_documents())
 
     def search(self, query: str, top_k: int = 5) -> list[Evidence]:
-        expanded_query = expand_query(query)
-        candidates = self.keyword_retriever.search(
+        if self.method not in {"bm25", "vector", "rrf", "rrf_expanded", "cross_encoder"}:
+            raise ValueError(f"unsupported retrieval method: {self.method}")
+        expanded_query = (
+            expand_query(query)
+            if self.method in {"rrf_expanded", "cross_encoder"}
+            else query
+        )
+        keyword_results = self.keyword_retriever.search(
             expanded_query, top_k=self.candidate_top_k
         )
+        vector_results = self.store.vector_search(
+            expanded_query, top_k=self.candidate_top_k
+        )
+        if self.method == "bm25":
+            return keyword_results[:top_k]
+        if self.method == "vector":
+            return vector_results[:top_k]
+        fused = reciprocal_rank_fusion(
+            [keyword_results, vector_results], top_k=self.candidate_top_k * 2
+        )
+        if self.method != "cross_encoder":
+            return fused[:top_k]
+        candidates = fused[: self.rerank_candidate_top_k]
         if not candidates:
             return []
-        similarities = self.store.similarity_scores(
-            expanded_query, [candidate.id for candidate in candidates]
-        )
-        lexical_scores = minmax([candidate.score for candidate in candidates])
-        vector_scores = minmax(
-            [similarities.get(candidate.id, 0.0) for candidate in candidates]
+        scores = self._get_cross_encoder().predict(
+            [(expanded_query, item.text) for item in candidates],
+            show_progress_bar=False,
         )
         ranked = sorted(
-            (
-                (
-                    (1.0 - self.vector_weight) * lexical_score
-                    + self.vector_weight * vector_score,
-                    candidate,
-                )
-                for candidate, lexical_score, vector_score in zip(
-                    candidates, lexical_scores, vector_scores
-                )
-            ),
-            key=lambda item: item[0],
-            reverse=True,
-        )[:top_k]
+            zip(scores, candidates), key=lambda pair: float(pair[0]), reverse=True
+        )
         return [
-            candidate.model_copy(update={"score": score, "rank": rank})
-            for rank, (score, candidate) in enumerate(ranked, 1)
+            candidate.model_copy(update={"score": float(score), "rank": rank})
+            for rank, (score, candidate) in enumerate(ranked[:top_k], 1)
         ]
+
+    def _get_cross_encoder(self):
+        if self._cross_encoder is None:
+            from sentence_transformers import CrossEncoder
+
+            self._cross_encoder = CrossEncoder(self.reranker_model)
+        return self._cross_encoder

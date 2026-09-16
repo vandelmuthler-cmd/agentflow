@@ -3,7 +3,8 @@ services:
     build:
       context: .
       args:
-        EMBED_MODEL: ${AGENTFLOW_DOCKER_EMBED_MODEL:-BAAI/bge-small-zh-v1.5}
+        EMBED_MODEL: ${AGENTFLOW_DOCKER_EMBED_MODEL:-BAAI/bge-m3}
+        RERANKER_MODEL: ${AGENTFLOW_DOCKER_RERANKER_MODEL:-BAAI/bge-reranker-base}
     ports:
       - "8000:8000"
     environment:
@@ -11,6 +12,8 @@ services:
       AGENTFLOW_LLM_BASE_URL: ${AGENTFLOW_LLM_BASE_URL:-https://api.deepseek.com}
       AGENTFLOW_LLM_MODEL: ${AGENTFLOW_LLM_MODEL:-deepseek-chat}
       AGENTFLOW_RETRIEVAL_BACKEND: ${AGENTFLOW_RETRIEVAL_BACKEND:-pgvector}
+      AGENTFLOW_RETRIEVAL_METHOD: ${AGENTFLOW_RETRIEVAL_METHOD:-cross_encoder}
+      AGENTFLOW_CHUNKING_STRATEGY: ${AGENTFLOW_CHUNKING_STRATEGY:-section_aware}
       AGENTFLOW_DATABASE_URL: postgresql://agentflow:${AGENTFLOW_POSTGRES_PASSWORD:-agentflow}@postgres:5432/agentflow
       AGENTFLOW_ADMIN_API_KEY: ${AGENTFLOW_ADMIN_API_KEY:-}
       AGENTFLOW_INPUT_COST_PER_MILLION_USD: ${AGENTFLOW_INPUT_COST_PER_MILLION_USD:-0}

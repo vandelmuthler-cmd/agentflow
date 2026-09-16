@@ -116,6 +116,7 @@ def index_document(request: DocumentIndexRequest) -> DocumentMutationResponse:
             chunk_size=request.chunk_size,
             overlap=request.overlap,
             language=request.language,
+            chunking_strategy=request.chunking_strategy,
         )
     except IndexConflictError as error:
         raise HTTPException(status_code=409, detail=str(error)) from error

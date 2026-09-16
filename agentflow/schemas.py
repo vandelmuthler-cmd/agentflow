@@ -90,6 +90,9 @@ class DocumentIndexRequest(BaseModel):
     chunk_size: int = Field(default=500, ge=100, le=4000)
     overlap: int = Field(default=50, ge=0, le=1000)
     language: Literal["en", "zh"] | None = None
+    chunking_strategy: Literal["fixed_char", "recursive_token", "section_aware"] = (
+        "section_aware"
+    )
 
     @model_validator(mode="after")
     def validate_chunk_window(self) -> "DocumentIndexRequest":

@@ -1,4 +1,4 @@
-# V2 Evaluation
+# Frozen Bilingual Evaluation
 
 ## Scope
 

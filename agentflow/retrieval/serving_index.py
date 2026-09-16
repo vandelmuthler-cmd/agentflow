@@ -58,7 +58,13 @@ class V2ServingIndexManager:
         chunk_size: int = 500,
         overlap: int = 50,
         language: str | None = None,
+        chunking_strategy: ChunkingStrategy | None = None,
     ) -> int:
+        if chunking_strategy is not None and chunking_strategy != self.strategy:
+            raise ValueError(
+                "chunking_strategy must match the active serving index strategy: "
+                f"{self.strategy}"
+            )
         if self.strategy != "fixed_char" and (chunk_size, overlap) != (500, 50):
             raise ValueError("chunk_size and overlap apply only to fixed_char V2 indexes")
         base_documents = load_documents(self.index_root / self.strategy / "documents.jsonl")

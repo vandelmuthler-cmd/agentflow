@@ -6,7 +6,7 @@ AgentFlow exposes the retrieval subsystem independently from the research workfl
 
 ### Local
 
-The default local backend stores chunk records in JSONL and normalized embeddings in a NumPy array. It is the backend used for the published retrieval benchmark.
+The local backend stores chunk records in JSONL and normalized embeddings in a NumPy array. It is used to reproduce the published frozen benchmark.
 
 ```env
 AGENTFLOW_RETRIEVAL_BACKEND=local
@@ -14,7 +14,7 @@ AGENTFLOW_RETRIEVAL_BACKEND=local
 
 ### PostgreSQL and pgvector
 
-The optional pgvector backend stores document chunks, source metadata, and normalized embeddings in PostgreSQL. BM25 candidate generation remains in process; semantic scores for those candidates are read from pgvector before weighted reranking.
+The pgvector backend stores document chunks, source metadata, and normalized BGE-M3 embeddings in PostgreSQL. It independently retrieves BM25 and vector candidates, fuses their ranks with Reciprocal Rank Fusion, and reranks the top candidates with a Cross-Encoder.
 
 ```env
 AGENTFLOW_RETRIEVAL_BACKEND=pgvector
@@ -23,11 +23,10 @@ AGENTFLOW_ADMIN_API_KEY=replace_with_a_random_admin_key
 ```
 
 Docker Compose starts PostgreSQL with the pgvector extension and selects this backend by default.
-V2 serving currently requires `AGENTFLOW_RETRIEVAL_BACKEND=local`; selecting V2 with pgvector fails explicitly rather than silently reading a different corpus.
 
-### V2 serving snapshots
+### Local benchmark snapshots
 
-The 16-document V2 benchmark index is immutable. With `AGENTFLOW_CORPUS_VERSION=v2`, text documents added through the management API are indexed into a separate serving snapshot under `data/index/v2/_serving/<strategy>/<model>/`. The service reads the published snapshot if present, otherwise the benchmark index. A restart reads the same published pointer.
+The 16-document frozen benchmark index is immutable. With `AGENTFLOW_CORPUS_VERSION=v2`, text documents added through the management API are indexed into a separate serving snapshot under `data/index/v2/_serving/<strategy>/<model>/`. The service reads the published snapshot if present, otherwise the benchmark index. A restart reads the same published pointer.
 
 ```env
 AGENTFLOW_CORPUS_VERSION=v2
@@ -38,7 +37,7 @@ AGENTFLOW_V2_RETRIEVAL_METHOD=vector
 AGENTFLOW_ADMIN_API_KEY=replace_with_a_random_admin_key
 ```
 
-An update encodes only the changed document, combines it with the unchanged vectors, writes a new document/vector snapshot, validates alignment and hashes, then atomically replaces the active pointer. A failed build leaves the previous pointer intact. Mutations of the original benchmark documents return HTTP 409. The selected chunking and embedding configuration has its own serving pointer. Text requests may specify `language` (`en` or `zh`); when omitted, the language is inferred from the presence of Chinese characters. For token-based V2 chunking, the service uses 300-token chunks with 50-token overlap; `chunk_size` and `overlap` apply only to `fixed_char`.
+An update encodes only the changed document, combines it with the unchanged vectors, writes a new document/vector snapshot, validates alignment and hashes, then atomically replaces the active pointer. A failed build leaves the previous pointer intact. Mutations of the original benchmark documents return HTTP 409. The selected chunking and embedding configuration has its own serving pointer. Text requests may specify `language` (`en` or `zh`); when omitted, the language is inferred from the presence of Chinese characters. Token-based chunking uses 300-token chunks with 50-token overlap; `chunk_size` and `overlap` apply only to `fixed_char`.
 
 ## Index a text document
 
@@ -51,7 +50,7 @@ curl -X POST http://127.0.0.1:8000/retrieval/index \
   -d '{"document_id":"operations-manual","source":"operations.md","text":"Document content..."}'
 ```
 
-Re-indexing the same `document_id` replaces its existing chunks. V2 publishes a validated snapshot atomically; the legacy V1 local files do not have a multi-file atomic publication guarantee.
+Re-indexing the same `document_id` replaces its existing chunks. The local benchmark backend publishes a validated snapshot atomically. PostgreSQL performs replacement in one transaction.
 
 ## Search
 
@@ -72,4 +71,4 @@ curl -X DELETE http://127.0.0.1:8000/retrieval/documents/operations-manual \
 
 ## Scope
 
-V2 snapshots protect readers from partial index publication and serialize writers through a local SQLite lock. This is a single-service workflow: other running API processes do not yet auto-refresh their cached retrievers after a mutation, and in-flight research runs are not coordinated with runtime refresh. Unreferenced snapshots from failed publications are not automatically collected. The service does not implement user accounts, role-based access control, background ingestion workers, or object storage.
+Local snapshots protect readers from partial index publication and serialize writers through a SQLite lock. The Compose deployment runs one API process; a document mutation refreshes that process's retriever. The service does not implement user accounts, role-based access control, background ingestion workers, or object storage.

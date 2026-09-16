@@ -1,6 +1,6 @@
-# V2 Bilingual Corpus and Evaluation
+# Bilingual Corpus and Evaluation
 
-AgentFlow V2 uses 16 selected English and Chinese publications as a difficult corpus for evaluating a general-purpose technical-document Agent.
+AgentFlow uses 16 selected English and Chinese publications as a difficult frozen corpus for evaluating a general-purpose technical-document Agent.
 
 Third-party PDFs are not redistributed. `data/v2_corpus_manifest.json` records the public source, DOI when available, language, role, document type, extraction status, and SHA-256 for each file. Set `AGENTFLOW_CORPUS_DIR` to an authorized local copy of the corpus.
 

@@ -20,8 +20,11 @@ class FakePgVectorStore:
     def load_documents(self) -> list[Evidence]:
         return self.documents
 
-    def similarity_scores(self, _query: str, ids: list[str]) -> dict[str, float]:
-        return {item_id: (1.0 if item_id == "doc-b__0" else 0.0) for item_id in ids}
+    def vector_search(self, _query: str, top_k: int) -> list[Evidence]:
+        return [
+            self.documents[1].model_copy(update={"score": 1.0, "rank": 1}),
+            self.documents[0].model_copy(update={"score": 0.2, "rank": 2}),
+        ][:top_k]
 
     def replace_document(
         self, document_id: str, source: str, chunks: list[Evidence]
@@ -39,22 +42,19 @@ def test_document_chunks_have_stable_document_prefix() -> None:
         "policy-v2", "policy.md", "A" * 220, chunk_size=100, overlap=20
     )
 
-    assert [chunk.id for chunk in chunks] == [
-        "policy-v2__0",
-        "policy-v2__1",
-        "policy-v2__2",
-    ]
+    assert [chunk.id for chunk in chunks] == ["policy-v2__section_aware__0"]
+    assert chunks[0].chunking_strategy == "section_aware"
 
 
-def test_pgvector_retriever_uses_persistent_similarity_for_reranking() -> None:
+def test_pgvector_retriever_fuses_independent_keyword_and_vector_recall() -> None:
     store = FakePgVectorStore()
     retriever = PgVectorResearchRetriever(
-        store, candidate_top_k=2, vector_weight=1.0
+        store, method="rrf_expanded", candidate_top_k=2
     )
 
     results = retriever.search("shared retrieval evidence", top_k=2)
 
-    assert [item.id for item in results] == ["doc-b__0", "doc-a__0"]
+    assert {item.id for item in results} == {"doc-a__0", "doc-b__0"}
 
 
 def test_pgvector_index_manager_replaces_and_deletes_one_document() -> None:
@@ -66,7 +66,7 @@ def test_pgvector_index_manager_replaces_and_deletes_one_document() -> None:
     )
     deleted = manager.delete_document("manual")
 
-    assert indexed == 2
+    assert indexed == 1
     assert store.replaced is not None
     assert store.replaced[0:2] == ("manual", "manual.md")
     assert store.deleted == "manual"

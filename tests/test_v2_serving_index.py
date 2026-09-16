@@ -192,7 +192,7 @@ def test_v2_serving_http_lifecycle() -> None:
         api_module.create_retriever.cache_clear()
 
 
-def test_v1_local_document_management_is_unchanged() -> None:
+def test_local_document_management_uses_final_chunking_default() -> None:
     with TemporaryDirectory() as directory:
         root = Path(directory)
         manager = RetrievalIndexManager(
@@ -203,16 +203,20 @@ def test_v1_local_document_management_is_unchanged() -> None:
             vector_ids_path=root / "ids.json",
         )
         with patch("agentflow.retrieval.management.save_vector_index"):
-            assert manager.index_text("manual", "manual.md", "A" * 150, chunk_size=100, overlap=20) == 2
-            assert len(load_documents(root / "documents.jsonl")) == 2
-            assert manager.delete_document("manual") == 2
+            assert manager.index_text("manual", "manual.md", "A" * 150, chunk_size=100, overlap=20) == 1
+            assert len(load_documents(root / "documents.jsonl")) == 1
+            assert manager.delete_document("manual") == 1
             assert load_documents(root / "documents.jsonl") == []
 
 
-def test_v2_pgvector_configuration_fails_explicitly() -> None:
-    try:
-        RetrievalIndexManager(backend="pgvector", corpus_version="v2")
-    except ValueError as error:
-        assert "requires the local serving index" in str(error)
-    else:
-        raise AssertionError("V2 must not silently write to an unrelated pgvector index")
+def test_final_pgvector_configuration_uses_online_index_manager() -> None:
+    class FakeStore:
+        pass
+
+    store = FakeStore()
+    manager = RetrievalIndexManager(
+        backend="pgvector", corpus_version="v2", pgvector_store=store
+    )
+
+    assert manager.pgvector_store is store
+    assert manager.v2_manager is None
